@@ -29,6 +29,7 @@
 *   **Tasks:**
     *   Expand the material drop tables for enemies (more diverse materials, varying quantities).
     *   Implement a `search` command for locations, allowing players to find materials in their environment.
+    *   **New:** Implement a 1% chance for undamaged weapon drop from enemies.
 
 ---
 
@@ -50,7 +51,18 @@
 
 ---
 
-**Phase 6: Player Effects & Status Ailments**
+**Phase 6: Skill Tree & Player Abilities**
+*   **Goal:** Implement a player skill tree for enhancing abilities and resource gathering.
+*   **Tasks:**
+    *   Add a `skillTree` object to the `player` state to track learned abilities and levels.
+    *   Define skills (e.g., "Scavenger" for increased resource yield, "Attack Boost", "Defense Boost", "Cooling Efficiency").
+    *   Implement a `learn [skill_name]` or `upgrade [skill_name]` command.
+    *   Implement logic for skill effects (e.g., "Scavenger" increases material drop rates/quantities).
+    *   Ensure skills have a maximum of 20 levels.
+
+---
+
+**Phase 7: Player Effects & Status Ailments**
 *   **Goal:** Introduce dynamic player effects based on environmental factors or combat.
 *   **Tasks:**
     *   Add `statusEffects` object to `player` state (e.g., `{ corrosion: { active: false, severity: 0 } }`).
@@ -60,7 +72,7 @@
 
 ---
 
-**Phase 7: Storyline Integration & Expansion**
+**Phase 8: Storyline Integration & Expansion**
 *   **Goal:** Weave these new mechanics into the game's narrative.
 *   **Tasks:**
     *   Introduce quests or objectives that require specific materials, crafted items, or upgraded weapons.
