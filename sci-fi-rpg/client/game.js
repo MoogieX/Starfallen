@@ -31,7 +31,17 @@ let player = {
     attack: 15,
     defense: 5,
     currentLocation: "bridge", // Player starts on the bridge
-    inventory: { "power_core": 0, "titanium_mesh": 0, "fuel_canister": 0 }
+    inventory: { 
+        "power_core": 0, "titanium_mesh": 0, "fuel_canister": 0, 
+        "energy_cell": 0, "scrap_metal": 0, "circuit_board": 0, 
+        "optic_fiber": 0, "rare_earth": 0, "synthetic_fabric": 0, 
+        "plasma_condenser": 0, "grav_stabilizer": 0, "nano_fibers": 0, 
+        "cryo_fluid": 0, "bio_luminescent_gel": 0, "quantum_chip": 0, 
+        "alloy_plate": 0, "power_regulator": 0, "sensor_array": 0, 
+        "data_crystal": 0, "thermal_regulator": 0, "magnetic_coil": 0, 
+        "polymer_resin": 0, "sonic_emitter": 0, "vibration_dampener": 0, 
+        "exotic_matter": 0 
+    }
 };
 
 // Game Settings
