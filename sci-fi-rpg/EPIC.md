@@ -1,6 +1,6 @@
 ### **Starfallen Storyline & Mechanics Expansion: Goal Sheet (Revised)**
 
-**Overall Goal:** Implement a robust looting, crafting, weapon/armor upgrade systems, and player status effects to expand gameplay and narrative.
+**Overall Goal:** Implement a robust looting, crafting, weapon/armor upgrade systems, and player status effects to expand gameplay and narrative. The game structure will be similar to Voidfallen, including directional assets.
 
 ---
 
@@ -29,7 +29,8 @@
 *   **Tasks:**
     *   Expand the material drop tables for enemies (more diverse materials, varying quantities).
     *   Implement a `search` command for locations, allowing players to find materials in their environment.
-    *   **New:** Implement a 1% chance for undamaged weapon drop from enemies.
+    *   Implement a 1% chance for undamaged weapon drop from enemies.
+    *   **New:** Random positive/negative attributes can be applied to salvaged armor or weapons (e.g., bonus attack, more/less recharge speed).
 
 ---
 
@@ -78,5 +79,6 @@
     *   Introduce quests or objectives that require specific materials, crafted items, or upgraded weapons.
     *   Expand location descriptions to hint at materials, crafting opportunities, or new challenges.
     *   Introduce new enemies and boss encounters that drop unique loot.
+    *   **New:** First boss drops a memory chip, triggering objective to go to an abandoned city to the northwest.
 
 ---
