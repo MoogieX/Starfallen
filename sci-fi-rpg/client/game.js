@@ -30,7 +30,8 @@ let player = {
     maxHealth: 100,
     attack: 15,
     defense: 5,
-    currentLocation: "bridge" // Player starts on the bridge
+    currentLocation: "bridge", // Player starts on the bridge
+    inventory: { "power_core": 0, "titanium_mesh": 0, "fuel_canister": 0 }
 };
 
 // Game Settings
@@ -196,6 +197,20 @@ function processCommand(command) {
                 case 'fight combat_bot':
                     startBattle(enemies.combat_bot);
                     break;
+                case 'inventory':
+                    printToOutput("\n--- INVENTORY ---");
+                    let inventoryEmpty = true;
+                    for (const item in player.inventory) {
+                        if (player.inventory[item] > 0) {
+                            printToOutput(`${item.replace('_', ' ')}: ${player.inventory[item]}`);
+                            inventoryEmpty = false;
+                        }
+                    }
+                    if (inventoryEmpty) {
+                        printToOutput("Your inventory is empty.");
+                    }
+                    printToOutput("-----------------");
+                    break;
                 default:
                     printToOutput(`Unknown command: '${command}'. Type 'help' for a list of commands.`);
                     break;
@@ -283,6 +298,12 @@ function endBattle(playerWon) {
     printToOutput(`--- BATTLE ENDED ---`);
     if (playerWon) {
         printToOutput("You are victorious!");
+        // Implement random material drop
+        const materials = Object.keys(player.inventory);
+        const randomMaterial = materials[Math.floor(Math.random() * materials.length)];
+        const quantity = Math.floor(Math.random() * 3) + 1; // 1 to 3 units
+        player.inventory[randomMaterial] += quantity;
+        printToOutput(`You looted ${quantity} ${randomMaterial.replace('_', ' ')}!`);
     } else {
         printToOutput("You were defeated.");
     }
