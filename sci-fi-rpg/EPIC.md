@@ -79,6 +79,7 @@
     *   Introduce quests or objectives that require specific materials, crafted items, or upgraded weapons.
     *   Expand location descriptions to hint at materials, crafting opportunities, or new challenges.
     *   Introduce new enemies and boss encounters that drop unique loot.
-    *   **New:** First boss drops a memory chip, triggering objective to go to an abandoned city to the northwest.
+    *   Implement a 10-act story structure.
+    *   First boss drops a memory chip, triggering objective to go to an abandoned city to the northwest.
 
 ---
