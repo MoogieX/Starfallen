@@ -175,7 +175,7 @@ function processCommand(command) {
                     printToOutput(`Your current health: ${player.health}/${player.maxHealth}`);
                     break;
                 case 'help':
-                    printToOutput("Available commands: look, help, fight [enemy_type], [directions like n, s, e, w, ne, nw, se, sw], music on/off, save, load.");
+                    printToOutput("Available commands: look, help, inventory, fight [enemy_type], [directions like n, s, e, w, ne, nw, se, sw], music on/off, save, load.");
                     break;
                 case 'music on':
                     playMusic();
