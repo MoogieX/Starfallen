@@ -79,7 +79,7 @@
     *   Introduce quests or objectives that require specific materials, crafted items, or upgraded weapons.
     *   Expand location descriptions to hint at materials, crafting opportunities, or new challenges.
     *   Introduce new enemies and boss encounters that drop unique loot.
-    *   Implement a 10-act story structure.
+    *   Implement a story structure of up to 25 chapters, with 10 acts per chapter.
     *   First boss drops a memory chip, triggering objective to go to an abandoned city to the northwest.
 
 ---
