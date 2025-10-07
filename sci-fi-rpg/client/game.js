@@ -161,6 +161,7 @@ const enemies = {
         drops: [
             { item: "scrap_metal", chance: 0.8, min: 1, max: 3 },
             { item: "wiring", chance: 0.3, min: 1, max: 1 }
+            { item: "microchips", chance: 0.5, min: 1, max: 1 },
         ]
     },
     "combat_android": {
@@ -190,7 +191,8 @@ const enemies = {
             { item: "scrap_metal", chance: 0.7, min: 1, max: 2 },
             { item: "gunpowder", chance: 0.3, min: 1, max: 1 },
             { item: "cloth", chance: 0.5, min: 1, max: 1 },
-            { item: "pipe", chance: 0.4, min: 1, max: 1 } // New drop
+            { item: "pipe", chance: 0.4, min: 1, max: 1 }
+            { item: "microchips", chance: 0.3, min: 1, max: 1 },
         ]
     },
     "broken_android": {
@@ -244,7 +246,7 @@ const materials = {
     },
     "gunpowder": {
         name: "Gunpowder",
-        description: "A volatile chemical compound used in explosives."
+        description: "A compound used in explosives."
     },
     "cloth": {
         name: "Cloth",
@@ -331,11 +333,11 @@ const weapons = {
 };
 
 const consumables = {
-    "basic_medkit": {
-        name: "Basic Medkit",
+    "basic_repairkit": {
+        name: "Basic repairkit",
         type: "consumable",
         health_restore: 25,
-        description: "A basic medical kit for minor injuries."
+        description: "A basic repair kit for minor injuries."
     },
     "repair_kit": {
         name: "Repair Kit",
@@ -404,8 +406,8 @@ const armor = {
 
 const recipes = {
     "basic_medkit": {
-        name: "Basic Medkit",
-        result: { id: "basic_medkit", type: "consumable", health_restore: 25 },
+        name: "Basic Repairkit",
+        result: { id: "basic_repairkit", type: "consumable", health_restore: 25 },
         ingredients: [
             { id: "microchips", quantity: 1 },
             { id: "wiring", quantity: 2 }
@@ -523,7 +525,7 @@ const recipes = {
 const medicalLogs = [
     "Log Entry 001: Patient: Cpt. Eva Rostova. Note: Patient refuses mandatory neural wellness scan for the third cycle. Cites 'superstition'. Physical health remains excellent, but recommend monitoring for signs of command-related stress.",
     "Log Entry 002: Patient: J. \"Hex\" Corbin, Engineering. Note: Treated for minor plasma burns to right hand. Patient was 'hot-wiring a nutrient paste dispenser for extra flavor'. Standard dermal regenerator applied. Advised against unauthorized equipment modification. Again.",
-    "Log Entry 003: Patient: Security Chief A. Singh. Note: Laceration to forearm sustained during zero-g training simulation. Patient insists it was 'just a scratch' and requested synth-staples over a dermal regenerator to 'save it for someone who needs it'. Request granted."
+    "Log Entry 003: Patient: Security Chief A. Singh. Note: Laceration to forearm sustained during ###### training simulation. Patient insists it was 'just a scratch' and requested synth-staples over a dermal regenerator to 'save it for someone who needs it'. Request granted."
 ];
 
 function checkRandomEncounter() {
@@ -583,7 +585,7 @@ async function loadGame() {
             displayLocation(); 
             printToOutput(`Your health: ${player.health}/${player.maxHealth}`);
         } else if (response.status === 404) {
-            printToOutput('ERROR; NO RECORDS SAVED.', 'text-danger');
+            printToOutput('ERROR; NO RECORDS FOUND.', 'text-danger');
         } else {
             const errorText = await response.text();
             throw new Error(errorText);
@@ -638,7 +640,7 @@ function processCommand(command) {
     }
 
     if (awaitingInteractionChoice) {
-        console.log("Awaiting interaction choice...");
+        console.log("AWAITING USER INPUT...");
         if (command.toLowerCase() === 'yes') {
             awaitingInteractionChoice = false;
             handleRoomInteractionYes();
@@ -654,7 +656,7 @@ function processCommand(command) {
     }
 
     if (awaitingInteractionSelection) {
-        console.log("Awaiting interaction selection...");
+        console.log("AWAITING USER INPUT...");
         const selection = parseInt(command);
         if (!isNaN(selection) && selection >= 1 && selection <= currentInteractionOptions.length) {
             const chosenOption = currentInteractionOptions[selection - 1];
@@ -682,7 +684,7 @@ function processCommand(command) {
             printToOutput(`SYSTEM STATUS: ${player.health}/${player.maxHealth}`, 'text-system');
             break;
         case 'help':
-            printToOutput("Available commands: look, inventory, equip [item], craft, use [item], view logs, scan chip, fly pioneer, repair, drop [item], weapons, armor, status, search, [directions like n, s, e, w], music on/off, save, load.", 'text-system');
+            printToOutput("Available commands: look, inventory, equip [item], craft, use [item], repair, drop [item], weapons, armor, status, search, [directions like n, s, e, w].", 'text-system');
             break;
         case 'music':
             if (args[0] === 'on') {
@@ -782,13 +784,13 @@ function processCommand(command) {
                         player.currentArmor = itemToEquip;
                         printToOutput(`Equipped ${itemToEquip.name}.`, 'text-system');
                     } else {
-                        printToOutput("You can't equip that type of item.", 'text-danger');
+                        printToOutput("ERROR, NOT ACCEPTED", 'text-danger');
                     }
                 } else {
                     printToOutput("Invalid item index. Type 'inventory' to see item indices.", 'text-danger');
                 }
             } else {
-                printToOutput("What do you want to equip? (e.g., equip 1)", 'text-danger');
+                printToOutput("What do you want to equip?", 'text-danger');
             }
             break;
         case 'craft':
@@ -999,13 +1001,13 @@ function processCommand(command) {
                                 }
                             }
                         } else {
-                            printToOutput(`You can't use that item.`, 'text-danger');
+                            printToOutput(`ERROR, YOU CAN'T DO THIS.`, 'text-danger');
                         }
                 } else {
-                    printToOutput("You don't have that item.", 'text-danger');
+                    printToOutput("ERROR NOT FOUND.", 'text-danger');
                 }
             } else {
-                printToOutput("What do you want to use? (e.g., use basic_medkit)", 'text-danger');
+                printToOutput("What do you want to use?", 'text-danger');
             }
             break;
 
@@ -1056,10 +1058,10 @@ function processCommand(command) {
                         // For now, let's just end the game as a placeholder for completing this chapter.
                         gameOver();
                     } else {
-                        printToOutput("You need Security Access Level 1 to pilot the 'Pioneer'.", 'text-danger');
+                        printToOutput("ERROR, DENIED.", 'text-danger');
                     }
                 } else {
-                    printToOutput("The 'Pioneer' is not here.", 'text-danger');
+                    printToOutput("ERROR.", 'text-danger');
                 }
             } else {
                 printToOutput("What do you want to fly?", 'text-danger');
@@ -1100,7 +1102,7 @@ function processCommand(command) {
                     }
                 }
             } else {
-                printToOutput("What do you want to drop? (e.g., drop scrap_metal 5 or drop 0)", 'text-danger');
+                printToOutput("What do you want to drop?", 'text-danger');
             }
             break;
 
@@ -1108,7 +1110,7 @@ function processCommand(command) {
             printToOutput("--- WEAPONS ---", 'text-system');
             const foundWeapons = player.equipment.filter(item => weapons[item.baseId]);
             if (foundWeapons.length === 0) {
-                printToOutput("No weapons in your equipment.", 'text-system');
+                printToOutput("ERROR, NULL.", 'text-system');
             } else {
                 foundWeapons.forEach(item => {
                     const itemIndex = player.equipment.indexOf(item);
@@ -1123,7 +1125,7 @@ function processCommand(command) {
             printToOutput("--- ARMOR ---", 'text-system');
             const foundArmor = player.equipment.filter(item => armor[item.baseId]);
             if (foundArmor.length === 0) {
-                printToOutput("No armor in your equipment.", 'text-system');
+                printToOutput("ERROR, NULL", 'text-system');
             } else {
                 foundArmor.forEach(item => {
                     const itemIndex = player.equipment.indexOf(item);
@@ -1249,7 +1251,7 @@ function processCommand(command) {
                             printToOutput(`Successfully upgraded ${itemData.name} to Tier ${itemToUpgrade.tier}!`, 'text-success');
                         }
                     } else {
-                        printToOutput("This item cannot be upgraded.", 'text-danger');
+                        printToOutput("ERROR, NULL EXCEPTION.", 'text-danger');
                     }
                 } else {
                     printToOutput("Invalid item index. Type 'inventory' to see item indices.", 'text-danger');
@@ -1304,7 +1306,7 @@ function processCommand(command) {
                     printToOutput(`Unknown enemy: '${enemyId}'.`, 'text-danger');
                 }
             } else {
-                printToOutput("Who do you want to fight? (e.g., fight scout_drone)", 'text-danger');
+                printToOutput("Who do you want to fight?", 'text-danger');
             }
             break;
         default:
@@ -1618,7 +1620,7 @@ function handleBattleCommand(command) {
             }
             break;
         default:
-            printToOutput(`Invalid battle command: '${command}'. You can 'attack' or 'run'.`, 'text-system');
+            printToOutput(`ERROR, INVALID OUTPUT: '${command}'.`, 'text-system');
             break;
     }
 }
@@ -1749,16 +1751,16 @@ async function runBootSequence() {
     userInput.disabled = true;
 
     await delayedPrint("INITIALIZING BIOS... ", bootDelay, false);
-    await delayedPrint("DONE", bootDelay);
+    await delayedPrint("INITIATED", bootDelay);
 
     await delayedPrint("CHECKING MEMORY... ", bootDelay, false);
-    await delayedPrint("OK", bootDelay);
+    await delayedPrint("ERROR NOT FOUND", bootDelay);
 
-    await delayedPrint("LOADING KERNEL... ", bootDelay, false);
+    await delayedPrint("LOADING... ", bootDelay, false);
     await drawProgressBar();
 
     await delayedPrint("\n\nSTARFALLEN v0.1.0-alpha", lineDelay, false, 'text-system');
-    await delayedPrint("Copyright (c) 2025, Moogie. All rights reserved.", lineDelay, false, 'text-system');
+    await delayedPrint("A GAME BY THE ONE AND ONLY MOOGIETHEBOOGIE!.", lineDelay, false, 'text-system');
     await delayedPrint("-------------------------------------------------", lineDelay, false, 'text-system');
     
     await delayedPrint("\nYou awaken from cryo-sleep. Your mission: Find out what happened on this ship.", lineDelay, false, 'text-dialogue');
