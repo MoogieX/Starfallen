@@ -132,6 +132,8 @@ const locations = {
         },
         searchable_materials: [
             { item: "microchips", chance: 0.1, min: 1, max: 1 }
+            { item: "wiring", chance: 0.3, min: 1, max: 1 },
+            { item: "cloth", chance: 0.5, min: 1, max: 3 } // New searchable material
         ],
         enemiesInLocation: []
     },
@@ -525,7 +527,7 @@ const recipes = {
 const medicalLogs = [
     "Log Entry 001: Patient: Cpt. Eva Rostova. Note: Patient refuses mandatory neural wellness scan for the third cycle. Cites 'superstition'. Physical health remains excellent, but recommend monitoring for signs of command-related stress.",
     "Log Entry 002: Patient: J. \"Hex\" Corbin, Engineering. Note: Treated for minor plasma burns to right hand. Patient was 'hot-wiring a nutrient paste dispenser for extra flavor'. Standard dermal regenerator applied. Advised against unauthorized equipment modification. Again.",
-    "Log Entry 003: Patient: Security Chief A. Singh. Note: Laceration to forearm sustained during ###### training simulation. Patient insists it was 'just a scratch' and requested synth-staples over a dermal regenerator to 'save it for someone who needs it'. Request granted."
+    "Log Entry 003: Patient: Security Chief A. Singh. Note: Laceration to forearm sustained during ###### training simulation. Patient insists it was 'just a scratch' and requested synth-staples over a dermal regenerator to 'save it for someone who needs it'. Request denied."
 ];
 
 function checkRandomEncounter() {
@@ -542,7 +544,7 @@ function checkRandomEncounter() {
         
         // 20% chance of a pair if possible
         if (potentialEnemies.length >= 2 && Math.random() < 0.20) {
-            printToOutput("You sense multiple hostiles...", "text-danger");
+            printToOutput("WARNING... MUlIPLE THREATS DETECTED", "text-danger");
             // Shuffle array and pick two
             const shuffled = [...potentialEnemies].sort(() => 0.5 - Math.random());
             encounterGroup = shuffled.slice(0, 2);
@@ -650,7 +652,7 @@ function processCommand(command) {
             printToOutput("You decide not to interact with the room for now.", 'text-system');
             return;
         } else {
-            printToOutput("Please answer 'yes' or 'no'.", 'text-danger');
+            printToOutput("ERROR INVALID OUTPUT, PLEASE USE 'yes' or 'no'.", 'text-danger');
             return;
         }
     }
@@ -666,7 +668,7 @@ function processCommand(command) {
             processCommand(chosenOption); // Execute the chosen command
             return;
         } else {
-            printToOutput("Invalid selection. Please enter the number corresponding to your choice.", 'text-danger');
+            printToOutput("ERROR, INVALID COMMAND.", 'text-danger');
             return;
         }
     }
@@ -684,7 +686,7 @@ function processCommand(command) {
             printToOutput(`SYSTEM STATUS: ${player.health}/${player.maxHealth}`, 'text-system');
             break;
         case 'help':
-            printToOutput("Available commands: look, inventory, equip [item], craft, use [item], repair, drop [item], weapons, armor, status, search, [directions like n, s, e, w].", 'text-system');
+            printToOutput("Available commands: look, inventory, equip [item], craft, use [item], repair, drop [item], weapons, armor, status, [directions like n, s, e, w].", 'text-system');
             break;
         case 'music':
             if (args[0] === 'on') {
@@ -787,7 +789,7 @@ function processCommand(command) {
                         printToOutput("ERROR, NOT ACCEPTED", 'text-danger');
                     }
                 } else {
-                    printToOutput("Invalid item index. Type 'inventory' to see item indices.", 'text-danger');
+                    printToOutput("ERROR NOT ACCEPTED, PLEASE TRY SOMETHING ELSE.", 'text-danger');
                 }
             } else {
                 printToOutput("What do you want to equip?", 'text-danger');
@@ -1001,7 +1003,7 @@ function processCommand(command) {
                                 }
                             }
                         } else {
-                            printToOutput(`ERROR, YOU CAN'T DO THIS.`, 'text-danger');
+                            printToOutput(`ERROR, UNAVALIBLE ACTION.`, 'text-danger');
                         }
                 } else {
                     printToOutput("ERROR NOT FOUND.", 'text-danger');
