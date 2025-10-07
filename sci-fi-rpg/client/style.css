@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Roboto Mono', monospace;
+    background-color: #000;
+    color: #00ff41;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#game-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow: hidden;
+}
+
+#game-output {
+    flex-grow: 1;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+#game-output::-webkit-scrollbar {
+    width: 8px;
+}
+
+#game-output::-webkit-scrollbar-track {
+    background: #000;
+}
+
+#game-output::-webkit-scrollbar-thumb {
+    background-color: #00ff41;
+    border-radius: 4px;
+}
+
+#input-container {
+    display: flex;
+    padding-top: 10px;
+}
+
+#input-prompt {
+    color: #00ff41;
+    font-weight: 700;
+    margin-right: 10px;
+    font-size: 16px;
+}
+
+#user-input {
+    flex-grow: 1;
+    background-color: transparent;
+    border: none;
+    color: #ffffff;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 16px;
+}
+
+#user-input:focus {
+    outline: none;
+}
+
+/* Text Color Classes */
+.text-system {
+    color: #ffc107; /* Amber */
+}
+
+.text-location {
+    color: #00bcd4; /* Cyan */
+    font-weight: 700;
+}
+
+.text-item {
+    color: #9c27b0; /* Purple */
+}
+
+.text-dialogue {
+    color: #ffffff; /* White */
+    font-style: italic;
+}
+
+.text-danger {
+    color: #f44336; /* Red */
+    font-weight: 700;
+}

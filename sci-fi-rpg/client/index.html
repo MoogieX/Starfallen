@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starfallen</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="game-output"></div>
+        <div id="input-container">
+            <span id="input-prompt">&gt;</span>
+            <input type="text" id="user-input" autofocus>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+
+    <!-- Audio Elements -->
+    <audio id="bg-music" loop>
+        <source src="audio/background_music.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <audio id="sfx">
+        <source src="audio/sfx.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+</body>
+</html>
