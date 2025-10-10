@@ -46,21 +46,21 @@ let player = {
     defense: 5,
     xp: 0,
     level: 1,
-    currentLocation: "bridge", // Player starts on the bridge
+    currentLocation: "bridge",
     materials: {},
     equipment: [
         { baseId: "laser_pistol", name: "Laser Pistol", tier: 1, attributes: [], perkData: {} },
         { baseId: "flak_jacket", name: "Flak Jacket", tier: 1, attributes: [], perkData: {} }
     ],
     questItems: [],
-    currentWeapon: null, // This will hold the equipped weapon object
-    currentArmor: null, // This will hold the equipped armor object
+    currentWeapon: "",
+    currentArmor: "",
     securityAccessLevel: 0,
     quests: { corruptedAndroidDefeated: false }
 };
 
 function getXpToNextLevel(level) {
-    return Math.floor(100 * (level * 1.5)); // Example: 100, 250, 450, 700...
+    return Math.floor(100 * (level * 1.5));
 }
 
 function isPlayerInLocation(locationId) {
@@ -94,7 +94,7 @@ const locations = {
             { item: "scrap_metal", chance: 0.6, min: 1, max: 3 },
             { item: "microchips", chance: 0.2, min: 1, max: 1 },
             { item: "gunpowder", chance: 0.4, min: 1, max: 2 },
-            { item: "pipe", chance: 0.5, min: 1, max: 2 } // New searchable material
+            { item: "pipe", chance: 0.5, min: 1, max: 2 }
         ],
         enemiesInLocation: ["scout_drone", "combat_android"]
     },
@@ -544,7 +544,7 @@ function checkRandomEncounter() {
         
         // 20% chance of a pair if possible
         if (potentialEnemies.length >= 2 && Math.random() < 0.20) {
-            printToOutput("WARNING... MUlIPLE THREATS DETECTED", "text-danger");
+            printToOutput("WARNING... MUlIPLE THREATS DETECTED!", "text-danger");
             // Shuffle array and pick two
             const shuffled = [...potentialEnemies].sort(() => 0.5 - Math.random());
             encounterGroup = shuffled.slice(0, 2);
@@ -612,7 +612,7 @@ function handleInput(event) {
     if (event.key === 'Enter') {
         const command = userInput.value.trim();
         printToOutput(`> ${command}`, 'text-system');
-        userInput.value = ''; // Clear input
+        userInput.value = ''; 
         
         processCommand(command);
     }
@@ -624,7 +624,7 @@ function handleMovement(command) {
 
     if (validExits[direction]) {
         player.currentLocation = validExits[direction];
-        displayLocation(); // Show the new location
+        displayLocation(); 
         return true;
     }
     return false;
@@ -652,7 +652,7 @@ function processCommand(command) {
             printToOutput("You decide not to interact with the room for now.", 'text-system');
             return;
         } else {
-            printToOutput("ERROR INVALID OUTPUT, PLEASE USE 'yes' or 'no'.", 'text-danger');
+            printToOutput("ERROR INVALID USER OUTPUT, PLEASE USE 'yes' or 'no'.", 'text-danger');
             return;
         }
     }
@@ -1027,7 +1027,7 @@ function processCommand(command) {
                         const droppedItem = player.equipment.splice(index, 1)[0]; // Remove from array
                         printToOutput(`You dropped ${droppedItem.name}.`, 'text-system');
                     } else {
-                        printToOutput("Invalid equipment index.", 'text-danger');
+                        printToOutput("ERROR, INVALID ITEM", 'text-danger');
                     }
                 } else { // Dropping materials by name
                     const itemToDrop = firstArg;
@@ -1058,7 +1058,7 @@ function processCommand(command) {
             printToOutput("--- WEAPONS ---", 'text-system');
             const foundWeapons = player.equipment.filter(item => weapons[item.baseId]);
             if (foundWeapons.length === 0) {
-                printToOutput("ERROR, NULL.", 'text-system');
+                printToOutput("ERROR, NULL EXCEPTION.", 'text-system');
             } else {
                 foundWeapons.forEach(item => {
                     const itemIndex = player.equipment.indexOf(item);
@@ -1202,7 +1202,7 @@ function processCommand(command) {
                         printToOutput("ERROR, NULL EXCEPTION.", 'text-danger');
                     }
                 } else {
-                    printToOutput("Invalid item index. Type 'inventory' to see item indices.", 'text-danger');
+                    printToOutput("ERROR, INVALID ITEM.", 'text-danger');
                 }
             } else {
                 printToOutput("What do you want to upgrade? (e.g., upgrade 1)", 'text-danger');
