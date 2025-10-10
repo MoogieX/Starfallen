@@ -106,7 +106,7 @@ const locations = {
         },
         searchable_materials: [
             { item: "wiring", chance: 0.3, min: 1, max: 1 },
-            { item: "cloth", chance: 0.5, min: 1, max: 2 } // New searchable material
+            { item: "cloth", chance: 0.5, min: 1, max: 2 } 
         ],
         enemiesInLocation: []
     },
@@ -120,7 +120,7 @@ const locations = {
         searchable_materials: [
             { item: "scrap_metal", chance: 0.8, min: 2, max: 4 },
             { item: "gunpowder", chance: 0.3, min: 1, max: 2 },
-            { item: "pipe", chance: 0.6, min: 1, max: 3 } // New searchable material
+            { item: "pipe", chance: 0.6, min: 1, max: 3 } 
         ],
         enemiesInLocation: []
     },
@@ -303,7 +303,7 @@ const weapons = {
     "bow_knife": {
         name: "Bow Knife",
         type: "weapon",
-        perk: "slash", // New perk for descriptive purposes
+        perk: "slash", 
         tiers: [
             { tier: 1, attack: 7, materials: [{ id: "scrap_metal", quantity: 8 }, { id: "wiring", quantity: 3 }] }
         ]
@@ -1732,7 +1732,7 @@ async function drawProgressBar(length = 20, delay = 50) {
         const progress = '[' + '#'.repeat(i) + ' '.repeat(length - i) + ']';
         progressBarSpan.textContent = progress;
     }
-    progressBarSpan.textContent += " DONE\n";
+    progressBarSpan.textContent += " COMPLEATED\n";
 }
 
 // Initial game setup
