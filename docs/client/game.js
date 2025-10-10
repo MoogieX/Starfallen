@@ -133,7 +133,7 @@ const locations = {
         searchable_materials: [
             { item: "microchips", chance: 0.1, min: 1, max: 1 }
             { item: "wiring", chance: 0.3, min: 1, max: 1 },
-            { item: "cloth", chance: 0.5, min: 1, max: 3 } // New searchable material
+            { item: "cloth", chance: 0.5, min: 1, max: 3 }
         ],
         enemiesInLocation: []
     },
@@ -161,7 +161,7 @@ const enemies = {
         xpValue: 20,
         description: "A small drone, built for flight and exploration.",
         drops: [
-            { item: "scrap_metal", chance: 0.8, min: 1, max: 3 },
+            { item: "scrap_metal", chance: 0.8, min: 1, max: 5 },
             { item: "wiring", chance: 0.3, min: 1, max: 1 }
             { item: "microchips", chance: 0.5, min: 1, max: 1 },
         ]
@@ -219,12 +219,12 @@ const enemies = {
         attack: 30,
         defense: 15,
         xpValue: 100,
-        description: "A heavily damaged android, its systems corrupted and hostile. It guards something important.",
+        description: "A heavily damaged android, its systems corrupted and hostile...",
         drops: [
             { item: "scrap_metal", chance: 1.0, min: 5, max: 10 },
             { item: "wiring", chance: 0.8, min: 3, max: 5 },
             { item: "microchips", chance: 0.6, min: 2, max: 3 },
-            { item: "plasma_canister", chance: 0.5, min: 1, max: 3 } // New drop
+            { item: "plasma_canister", chance: 0.5, min: 1, max: 3 }
         ]
     }
 };
@@ -236,7 +236,7 @@ const materials = {
     },
     "wiring": {
         name: "Wiring",
-        description: "A bundle of copper and plastic wires. Essential for electronics."
+        description: "A bundle of wires insulated in plastic. Essential for electronics."
     },
     "microchips": {
         name: "Microchips",
@@ -341,8 +341,8 @@ const consumables = {
         health_restore: 25,
         description: "A basic repair kit for minor injuries."
     },
-    "repair_kit": {
-        name: "Repair Kit",
+    "advanced_repair_kit": {
+        name: "Advanced Repair Kit",
         type: "consumable",
         health_restore: 9999, // Effectively full health
         description: "A comprehensive kit to fully repair your systems."
@@ -423,9 +423,9 @@ const recipes = {
             { id: "wiring", quantity: 1 }
         ]
     },
-    "repair_kit": {
-        name: "Repair Kit",
-        result: { id: "repair_kit", type: "consumable", health_restore: 9999 },
+    "advanced_repair_kit": {
+        name: "Advanced Repair Kit",
+        result: { id: "advanced_repair_kit", type: "consumable", health_restore: 9999 },
         ingredients: [
             { id: "scrap_metal", quantity: 3 },
             { id: "wiring", quantity: 3 }
@@ -478,7 +478,7 @@ const recipes = {
         result: { id: "molotov", type: "consumable", damagePerTurn: 15, duration: 2 },
         ingredients: [
             { id: "cloth", quantity: 1 },
-            { id: "plasma_canister", quantity: 1 } // Using plasma canister for fuel
+            { id: "plasma_canister", quantity: 1 }
         ]
     },
     "pipe_bomb": {
@@ -925,7 +925,7 @@ function processCommand(command) {
                                     const enemyInQueue = enemies[enemyId];
                                     if (enemyInQueue) {
                                         enemyInQueue.health -= item.damage;
-                                        printToOutput(`A ${enemyInQueue.name} in the queue takes ${item.damage} damage!`, 'text-system');
+                                        printToOutput(`A ${enemyInQueue.name} takes ${item.damage} damage!`, 'text-system');
                                         // Note: Defeating enemies in queue this way won't trigger handleEnemyDefeated immediately
                                         // This might need more complex logic if we want to remove them from queue immediately
                                     }
@@ -958,7 +958,7 @@ function processCommand(command) {
                                                 enemyInQueue.statusEffects = [];
                                             }
                                             enemyInQueue.statusEffects.push(fireBurnEffect);
-                                        printToOutput(`A ${enemyInQueue.name} in the queue is engulfed in flames!`, 'text-danger');
+                                        printToOutput(`A ${enemyInQueue.name} is engulfed in flames!`, 'text-danger');
                                     }
                                 });
                             } else if (item.damage && item.name === 'Pipe Bomb') { // Handle pipe bomb damage
@@ -983,7 +983,7 @@ function processCommand(command) {
                                         const enemyInQueue = enemies[enemyId];
                                         if (enemyInQueue) {
                                             enemyInQueue.health -= item.damage;
-                                            printToOutput(`A ${enemyInQueue.name} in the queue takes ${item.damage} damage!`, 'text-system');
+                                            printToOutput(`A ${enemyInQueue.name} takes ${item.damage} damage!`, 'text-system');
                                         }
                                     });
                                 } else { // Not in battle, clear the room
@@ -1013,62 +1013,8 @@ function processCommand(command) {
             }
             break;
 
-        case 'view':
-            if (args[0] === 'logs') {
-                if (isPlayerInLocation('medbay')) {
-                    printToOutput("--- Accessing Medical Terminal ---", "text-system");
-                    medicalLogs.forEach(log => {
-                        printToOutput(log, "text-dialogue");
-                    });
-                } else {
-                    printToOutput("There are no logs to view here.", 'text-danger');
-                }
-            } else {
-                printToOutput("What do you want to view?", 'text-danger');
-            }
-            break;
 
-        case 'scan':
-            if (args[0] === 'chip') {
-                if (isPlayerInLocation('engineering')) {
-                    if (player.questItems.includes('memory_chip')) {
-                        printToOutput("--- Analyzing Memory Chip ---", "text-system");
-                        printToOutput("The chip contains encrypted security protocols for the 'Pioneer' shuttle. Access Level 1 granted.", "text-dialogue");
-                        
-                        // Remove chip and grant access
-                        player.questItems = player.questItems.filter(item => item !== 'memory_chip');
-                        player.securityAccessLevel = 1;
-                        printToOutput("Security Access Level 1 acquired. You can now 'fly pioneer' from the Shuttle Bay.", "text-success");
-                    } else {
-                        printToOutput("You don't have a memory chip to scan.", 'text-danger');
-                    }
-                } else {
-                    printToOutput("You can only scan memory chips at the terminal in the Engineering Deck.", 'text-danger');
-                }
-            } else {
-                printToOutput("What do you want to scan?", 'text-danger');
             }
-            break;
-
-        case 'fly':
-            if (args[0] === 'pioneer') {
-                if (isPlayerInLocation('shuttle_bay')) {
-                    if (player.securityAccessLevel >= 1) {
-                        printToOutput("--- Activating 'Pioneer' Shuttle ---", "text-system");
-                        printToOutput("The shuttle's engines hum to life. You engage the thrusters and blast off into the unknown!", "text-success");
-                        // This could lead to a new game state, location, or even end the game.
-                        // For now, let's just end the game as a placeholder for completing this chapter.
-                        gameOver();
-                    } else {
-                        printToOutput("ERROR, DENIED.", 'text-danger');
-                    }
-                } else {
-                    printToOutput("ERROR.", 'text-danger');
-                }
-            } else {
-                printToOutput("What do you want to fly?", 'text-danger');
-            }
-            break;
 
         case 'drop':
             if (args.length > 0) {
@@ -1289,30 +1235,12 @@ function processCommand(command) {
                         printToOutput("This item cannot be deconstructed or has no known recipe.", 'text-danger');
                     }
                 } else {
-                    printToOutput("Invalid item index. Type 'inventory' to see item indices.", 'text-danger');
+                    printToOutput("ERROR, INVALID ITEM.", 'text-danger');
                 }
             } else {
-                printToOutput("What do you want to deconstruct? (e.g., deconstruct 0)", 'text-danger');
+                printToOutput("What do you want to deconstruct?", 'text-danger');
             }
             break;
-        case 'fight':
-            if (args.length > 0) {
-                const enemyId = args[0];
-                const currentLocation = locations[player.currentLocation];
-    
-                if (currentLocation.enemiesInLocation && currentLocation.enemiesInLocation.includes(enemyId)) {
-                    startBattle(enemies[enemyId]);
-                } else if (enemies[enemyId]) {
-                    printToOutput(`There is no ${enemies[enemyId].name} here to fight.`, 'text-danger');
-                } else {
-                    printToOutput(`Unknown enemy: '${enemyId}'.`, 'text-danger');
-                }
-            } else {
-                printToOutput("Who do you want to fight?", 'text-danger');
-            }
-            break;
-        default:
-            printToOutput(`Unknown command: '${command}'. Type 'help' for a list of commands.`, 'text-danger');
     }
 }
 
@@ -1604,7 +1532,6 @@ function handleBattleCommand(command) {
                 battleActive = false;
                 enemyQueue = [];
                 currentEnemy = null;
-                printToOutput("You can now issue regular commands again. Type 'help' for options.", 'text-system');
             } else {
                 printToOutput("You failed to escape!", 'text-danger');
                 let enemyDamage = Math.max(0, currentEnemy.attack - totalPlayerDefense);
@@ -1704,7 +1631,6 @@ function endBattle() {
     enemyQueue = [];
     battleRewards = { xp: 0, items: {} };
 
-    printToOutput("You can now issue regular commands again. Type 'help' for options.", 'text-system');
 
     awaitingInteractionChoice = true;
     printToOutput("\nDo you want to interact with the room? (yes/no)", 'text-system');
@@ -1761,11 +1687,11 @@ async function runBootSequence() {
     await delayedPrint("LOADING... ", bootDelay, false);
     await drawProgressBar();
 
-    await delayedPrint("\n\nSTARFALLEN v0.1.0-alpha", lineDelay, false, 'text-system');
+    await delayedPrint("\n\nSTARFALLEN v0.1.6-alpha", lineDelay, false, 'text-system');
     await delayedPrint("A GAME BY THE ONE AND ONLY MOOGIETHEBOOGIE!.", lineDelay, false, 'text-system');
     await delayedPrint("-------------------------------------------------", lineDelay, false, 'text-system');
     
-    await delayedPrint("\nYou awaken from cryo-sleep. Your mission: Find out what happened on this ship.", lineDelay, false, 'text-dialogue');
+    await delayedPrint("\nYou awaken from cryo-sleep. Your mission: Leave the ship.", lineDelay, false, 'text-dialogue');
 
     userInput.disabled = false;
     userInput.focus();
