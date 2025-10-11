@@ -141,7 +141,7 @@ const locations = {
             { item: "cloth", chance: 0.5, min: 1, max: 3 } // New searchable material
         ],
         enemiesInLocation: []
-    },,
+    },
     "shuttle_bay": {
         name: "Shuttle Bay",
         description: "The main shuttle 'Pioneer' sits ready for launch, although it probably wouldn't be smart to launch just yet. Exits: north (Cargo Bay).",
@@ -1028,6 +1028,7 @@ function processCommand(command) {
                 printToOutput("What do you want to fly?", 'text-danger');
             }
             break;
+    }
 
         case 'drop':
             if (args.length > 0) {
