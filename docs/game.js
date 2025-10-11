@@ -1,7 +1,9 @@
 let gameOutput, userInput, bgMusic, sfx;
 
 function playMusic() {
-    bgMusic.play().catch(error => console.log("ERROR 404 NOT FOUND:", error));
+    if (bgMusic) {
+        bgMusic.play().catch(error => console.log("ERROR 404 NOT FOUND:", error));
+    }
 }
 
 function pauseMusic() {
@@ -9,8 +11,10 @@ function pauseMusic() {
 }
 
 function playSoundEffect() {
-    sfx.currentTime = 0;
-    sfx.play().catch(error => console.log("SFX autoplay prevented:", error));
+    if (sfx) {
+        sfx.currentTime = 0;
+        sfx.play().catch(error => console.log("SFX autoplay prevented:", error));
+    }
 }
 
 let battleActive = false;
@@ -131,7 +135,7 @@ const locations = {
             e: "bridge"
         },
         searchable_materials: [
-            { item: "microchips", chance: 0.1, min: 1, max: 1 }
+            { item: "microchips", chance: 0.1, min: 1, max: 1 },
             { item: "wiring", chance: 0.3, min: 1, max: 1 },
             { item: "cloth", chance: 0.5, min: 1, max: 3 } // New searchable material
         ],
@@ -162,7 +166,7 @@ const enemies = {
         description: "A small drone, built for flight and exploration.",
         drops: [
             { item: "scrap_metal", chance: 0.8, min: 1, max: 3 },
-            { item: "wiring", chance: 0.3, min: 1, max: 1 }
+            { item: "wiring", chance: 0.3, min: 1, max: 1 },
             { item: "microchips", chance: 0.5, min: 1, max: 1 },
         ]
     },
@@ -193,7 +197,7 @@ const enemies = {
             { item: "scrap_metal", chance: 0.7, min: 1, max: 2 },
             { item: "gunpowder", chance: 0.3, min: 1, max: 1 },
             { item: "cloth", chance: 0.5, min: 1, max: 1 },
-            { item: "pipe", chance: 0.4, min: 1, max: 1 }
+            { item: "pipe", chance: 0.4, min: 1, max: 1 },
             { item: "microchips", chance: 0.3, min: 1, max: 1 },
         ]
     },
