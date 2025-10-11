@@ -1027,7 +1027,6 @@ function processCommand(command) {
             } else {
                 printToOutput("What do you want to fly?", 'text-danger');
             }
-        }
             break;
 
         case 'drop':
