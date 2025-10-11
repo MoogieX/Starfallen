@@ -1,3 +1,4 @@
+console.log("THIS IS A TEST");
 let gameOutput, userInput, bgMusic, sfx;
 
 function playMusic() {
