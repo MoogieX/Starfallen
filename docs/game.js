@@ -141,7 +141,7 @@ const locations = {
             { item: "cloth", chance: 0.5, min: 1, max: 3 } // New searchable material
         ],
         enemiesInLocation: []
-    },
+    },,
     "shuttle_bay": {
         name: "Shuttle Bay",
         description: "The main shuttle 'Pioneer' sits ready for launch, although it probably wouldn't be smart to launch just yet. Exits: north (Cargo Bay).",
@@ -565,43 +565,6 @@ function checkRandomEncounter() {
     return false;
 }
 
-async function saveGame() {
-    try {
-        const response = await fetch('/save', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(player) // Sending player object for now
-        });
-        const message = await response.text();
-        printToOutput(message, 'text-system');
-    } catch (error) {
-        console.error('ERROR; CORRUPTED DATA:', error);
-        printToOutput('FAILED TO SAVE MEMORY...', 'text-danger');
-    }
-}
-
-async function loadGame() {
-    try {
-        const response = await fetch('/load');
-        if (response.ok) {
-            const loadedPlayer = await response.json();
-            player = { ...player, ...loadedPlayer };
-            printToOutput('DATA LOADING...', 'text-system');
-            displayLocation(); 
-            printToOutput(`Your health: ${player.health}/${player.maxHealth}`);
-        } else if (response.status === 404) {
-            printToOutput('ERROR; NO RECORDS FOUND.', 'text-danger');
-        } else {
-            const errorText = await response.text();
-            throw new Error(errorText);
-        }
-    } catch (error) {
-        console.error('ERROR LOADING DATA:', error);
-        printToOutput('FAILED TO LOAD DATA.', 'text-danger');
-    }
-}
 
 function printToOutput(message, className) {
     const span = document.createElement('span');
@@ -704,16 +667,7 @@ function processCommand(command) {
                 printToOutput("Use 'music on' or 'music off'.", 'text-danger');
             }
             break;
-        case 'save':
-            if (player.currentLocation === 'engineering') {
-                saveGame();
-            } else {
-                printToOutput("You can only back up your memory core in the Engineering Deck.", 'text-danger');
-            }
-            break;
-        case 'load':
-            loadGame();
-            break;
+
         case 'search':
             const currentSearchLocation = locations[player.currentLocation];
             if (currentSearchLocation.searchable_materials && currentSearchLocation.searchable_materials.length > 0) {
