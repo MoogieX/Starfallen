@@ -10,7 +10,7 @@ function pauseMusic() {
 
 function playSoundEffect() {
     sfx.currentTime = 0;
-    sfx.play().catch(error => console.log("SFX autoplay prevented:", error));
+    sfx.play().catch(error => console.log("SFX autoplay prevented...:", error));
 }
 
 let battleActive = false;
@@ -652,7 +652,7 @@ function processCommand(command) {
             printToOutput("You decide not to interact with the room for now.", 'text-system');
             return;
         } else {
-            printToOutput("ERROR INVALID USER OUTPUT, PLEASE USE 'yes' or 'no'.", 'text-danger');
+            printToOutput("ERROR INVALID USER OUTPUT", 'text-danger');
             return;
         }
     }
@@ -1241,7 +1241,7 @@ function processCommand(command) {
                 printToOutput("What do you want to deconstruct?", 'text-danger');
             }
             break;
-    }
+    
 }
 
 function handleRoomInteractionYes() {
