@@ -586,8 +586,7 @@ function handleInput(event) {
     }
 }
 
-function handleMovement(command) {
-    const direction = command.toLowerCase();
+function handleMovement(direction) {
     const validExits = locations[player.currentLocation].exits;
 
     if (validExits[direction]) {
@@ -598,259 +597,219 @@ function handleMovement(command) {
     return false;
 }
 
-function processCommand(command) {
-    console.log("Processing command:", command);
-    console.log("battleActive:", battleActive);
-    console.log("awaitingInteractionChoice:", awaitingInteractionChoice);
-    console.log("awaitingInteractionSelection:", awaitingInteractionSelection);
-
-    if (battleActive) {
-        handleBattleCommand(command);
-        return;
-    }
-
-    if (awaitingInteractionChoice) {
-        console.log("AWAITING USER INPUT...");
-        if (command.toLowerCase() === 'yes') {
-            awaitingInteractionChoice = false;
-            handleRoomInteractionYes();
-            return;
-        } else if (command.toLowerCase() === 'no') {
-            awaitingInteractionChoice = false;
-            printToOutput("You decide not to interact with the room for now.", 'text-system');
-            return;
+const commandHandlers = {
+    look: (args) => {
+        displayLocation();
+        printToOutput(`SYSTEM STATUS: ${player.health}/${player.maxHealth}`, 'text-system');
+    },
+    help: (args) => {
+        printToOutput("Available commands: look, inventory, equip [item], craft, use [item], repair, drop [item], weapons, armor, status, [directions like n, s, e, w].", 'text-system');
+    },
+    music: (args) => {
+        if (args.length > 0 && args[0].toLowerCase() === 'on') {
+            playMusic();
+            printToOutput("Background music turned on.", 'text-system');
+        } else if (args.length > 0 && args[0].toLowerCase() === 'off') {
+            pauseMusic();
+            printToOutput("Background music turned off.", 'text-system');
         } else {
-            printToOutput("ERROR INVALID OUTPUT, PLEASE USE 'yes' or 'no'.", 'text-danger');
-            return;
+            printToOutput("Use 'music on' or 'music off'.", 'text-danger');
         }
-    }
+    },
+    search: (args) => {
+        const currentSearchLocation = locations[player.currentLocation];
+        if (currentSearchLocation.searchable_materials && currentSearchLocation.searchable_materials.length > 0) {
+            printToOutput("You search the area...", 'text-system');
+            let foundSomething = false;
+            currentSearchLocation.searchable_materials.forEach(drop => {
+                if (Math.random() < drop.chance) {
+                    foundSomething = true;
+                    const itemData = materials[drop.item] || consumables[drop.item];
+                    const equipmentData = weapons[drop.item] || armor[drop.item];
 
-    if (awaitingInteractionSelection) {
-        console.log("AWAITING USER INPUT...");
-        const selection = parseInt(command);
-        if (!isNaN(selection) && selection >= 1 && selection <= currentInteractionOptions.length) {
-            const chosenOption = currentInteractionOptions[selection - 1];
-            console.log("Chosen option:", chosenOption);
-            awaitingInteractionSelection = false; // Reset state
-            currentInteractionOptions = []; // Clear options
-            processCommand(chosenOption); // Execute the chosen command
-            return;
-        } else {
-            printToOutput("ERROR, INVALID COMMAND.", 'text-danger');
-            return;
-        }
-    }
-
-    if (handleMovement(command)) {
-        checkRandomEncounter();
-        return;
-    }
-
-    const [commandWord, ...args] = command.toLowerCase().split(' ');
-
-    switch (commandWord) {
-        case 'look':
-            displayLocation();
-            printToOutput(`SYSTEM STATUS: ${player.health}/${player.maxHealth}`, 'text-system');
-            break;
-        case 'help':
-            printToOutput("Available commands: look, inventory, equip [item], craft, use [item], repair, drop [item], weapons, armor, status, [directions like n, s, e, w].", 'text-system');
-            break;
-        case 'music':
-            if (args[0] === 'on') {
-                playMusic();
-                printToOutput("Background music turned on.", 'text-system');
-            } else if (args[0] === 'off') {
-                pauseMusic();
-                printToOutput("Background music turned off.", 'text-system');
-            } else {
-                printToOutput("Use 'music on' or 'music off'.", 'text-danger');
-            }
-            break;
-
-        case 'search':
-            const currentSearchLocation = locations[player.currentLocation];
-            if (currentSearchLocation.searchable_materials && currentSearchLocation.searchable_materials.length > 0) {
-                printToOutput("You search the area...", 'text-system');
-                let foundSomething = false;
-                currentSearchLocation.searchable_materials.forEach(drop => {
-                    if (Math.random() < drop.chance) {
-                        foundSomething = true;
-                        const itemData = materials[drop.item] || consumables[drop.item];
-                        const equipmentData = weapons[drop.item] || armor[drop.item];
-
-                        if (itemData) { // It's a stackable material/consumable
-                            const quantity = Math.floor(Math.random() * (drop.max - drop.min + 1)) + drop.min;
-                            if (player.materials[drop.item]) {
-                                player.materials[drop.item] += quantity;
-                            } else {
-                                player.materials[drop.item] = quantity;
-                            }
-                            printToOutput(`Found ${quantity}x ${itemData.name}!`, 'text-item');
-                        } else if (equipmentData) { // It's a unique weapon/armor
-                             const newItem = {
-                                baseId: drop.item,
-                                name: equipmentData.name,
-                                tier: 1,
-                                attributes: []
-                            };
-                            // No attributes on searched items for now, to make battle drops more special
-                            player.equipment.push(newItem);
-                            printToOutput(`Found a ${newItem.name}!`, 'text-item');
+                    if (itemData) { // It's a stackable material/consumable
+                        const quantity = Math.floor(Math.random() * (drop.max - drop.min + 1)) + drop.min;
+                        if (player.materials[drop.item]) {
+                            player.materials[drop.item] += quantity;
+                        } else {
+                            player.materials[drop.item] = quantity;
                         }
+                        printToOutput(`Found ${quantity}x ${itemData.name}!`, 'text-item');
+                    } else if (equipmentData) { // It's a unique weapon/armor
+                         const newItem = {
+                            baseId: drop.item,
+                            name: equipmentData.name,
+                            tier: 1,
+                            attributes: []
+                        };
+                        // No attributes on searched items for now, to make battle drops more special
+                        player.equipment.push(newItem);
+                        printToOutput(`Found a ${newItem.name}!`, 'text-item');
                     }
-                });
-                if (!foundSomething) {
-                    printToOutput("You found nothing of interest.", 'text-system');
                 }
-            } else {
-                printToOutput("There's nothing to search here.", 'text-system');
+            });
+            if (!foundSomething) {
+                printToOutput("You found nothing of interest.", 'text-system');
             }
-            break;
-        case 'inventory':
-        case 'i':
-            printToOutput("--- EQUIPMENT ---", 'text-system');
-            if (player.equipment.length === 0) {
-                printToOutput("No equipment.", 'text-system');
-            } else {
-                player.equipment.forEach((item, index) => {
-                    printToOutput(`[${index}] ${item.name}`, 'text-item');
-                });
-            }
+        } else {
+            printToOutput("There's nothing to search here.", 'text-system');
+        }
+    },
+    inventory: (args) => {
+        printToOutput("--- EQUIPMENT ---", 'text-system');
+        if (player.equipment.length === 0) {
+            printToOutput("No equipment.", 'text-system');
+        } else {
+            player.equipment.forEach((item, index) => {
+                printToOutput(`[${index}] ${item.name}`, 'text-item');
+            });
+        }
 
-            printToOutput("--- MATERIALS ---", 'text-system');
-            const materialKeys = Object.keys(player.materials);
-            if (materialKeys.length === 0) {
-                printToOutput("No materials.", 'text-system');
-            } else {
-                for (const itemKey of materialKeys) {
-                    const quantity = player.materials[itemKey];
-                    const item = materials[itemKey] || consumables[itemKey];
-                    if (item) {
-                        printToOutput(`${item.name} (x${quantity})`, 'text-item');
-                    }
+        printToOutput("--- MATERIALS ---", 'text-system');
+        const materialKeys = Object.keys(player.materials);
+        if (materialKeys.length === 0) {
+            printToOutput("No materials.", 'text-system');
+        } else {
+            for (const itemKey of materialKeys) {
+                const quantity = player.materials[itemKey];
+                const item = materials[itemKey] || consumables[itemKey];
+                if (item) {
+                    printToOutput(`${item.name} (x${quantity})`, 'text-item');
                 }
             }
-            break;
-        case 'equip':
-            if (args.length > 0) {
-                const index = parseInt(args[0]);
-                if (!isNaN(index) && index >= 0 && index < player.equipment.length) {
-                    const itemToEquip = player.equipment[index];
-                    
-                    if (weapons[itemToEquip.baseId]) { // It's a weapon
-                        player.currentWeapon = itemToEquip;
-                        printToOutput(`Equipped ${itemToEquip.name}.`, 'text-system');
-                    } else if (armor[itemToEquip.baseId]) { // It's an armor
-                        player.currentArmor = itemToEquip;
-                        printToOutput(`Equipped ${itemToEquip.name}.`, 'text-system');
-                    } else {
-                        printToOutput("ERROR, NOT ACCEPTED", 'text-danger');
-                    }
+        }
+    },
+    i: (args) => {
+        commandHandlers.inventory(args);
+    },
+    equip: (args) => {
+        if (args.length > 0) {
+            const index = parseInt(args[0]);
+            if (!isNaN(index) && index >= 0 && index < player.equipment.length) {
+                const itemToEquip = player.equipment[index];
+                
+                if (weapons[itemToEquip.baseId]) { // It's a weapon
+                    player.currentWeapon = itemToEquip;
+                    printToOutput(`Equipped ${itemToEquip.name}.`, 'text-system');
+                } else if (armor[itemToEquip.baseId]) { // It's an armor
+                    player.currentArmor = itemToEquip;
+                    printToOutput(`Equipped ${itemToEquip.name}.`, 'text-system');
                 } else {
-                    printToOutput("ERROR NOT ACCEPTED, PLEASE TRY SOMETHING ELSE.", 'text-danger');
+                    printToOutput("ERROR, NOT ACCEPTED", 'text-danger');
                 }
             } else {
-                printToOutput("What do you want to equip?", 'text-danger');
+                printToOutput("ERROR NOT ACCEPTED, PLEASE TRY SOMETHING ELSE.", 'text-danger');
             }
-            break;
-        case 'craft':
-            if (args.length === 0) {
-                // No arguments, so show the recipe list
-                printToOutput("--- CRAFTING RECIPES ---", 'text-system');
-                if (Object.keys(recipes).length === 0) {
-                    printToOutput("No recipes available.", 'text-system');
-                } else {
-                    for (const recipeId in recipes) {
-                        const recipe = recipes[recipeId];
-                        printToOutput(`${recipe.name} (craft ${recipeId}):`, 'text-item');
-                        recipe.ingredients.forEach(ingredient => {
-                            const materialName = materials[ingredient.id] ? materials[ingredient.id].name : ingredient.id;
-                            printToOutput(`  - ${materialName} (x${ingredient.quantity})`, 'text-dialogue');
-                        });
-                    }
-                }
+        } else {
+            printToOutput("What do you want to equip?", 'text-danger');
+        }
+    },
+    craft: (args) => {
+        if (args.length === 0) {
+            // No arguments, so show the recipe list
+            printToOutput("--- CRAFTING RECIPES ---", 'text-system');
+            if (Object.keys(recipes).length === 0) {
+                printToOutput("No recipes available.", 'text-system');
             } else {
-                // Arguments exist, so try to craft the item
-                const recipeId = args[0];
-                const recipe = recipes[recipeId];
+                for (const recipeId in recipes) {
+                    const recipe = recipes[recipeId];
+                    printToOutput(`${recipe.name} (craft ${recipeId}):`, 'text-item');
+                    recipe.ingredients.forEach(ingredient => {
+                        const materialName = materials[ingredient.id] ? materials[ingredient.id].name : ingredient.id;
+                        printToOutput(`  - ${materialName} (x${ingredient.quantity})`, 'text-dialogue');
+                    });
+                }
+            }
+        } else {
+            // Arguments exist, so try to craft the item
+            const recipeId = args[0].toLowerCase();
+            const recipe = recipes[recipeId];
 
-                if (recipe) {
-                    let canCraft = true;
-                    // Check if player has enough materials
+            if (recipe) {
+                let canCraft = true;
+                // Check if player has enough materials
+                for (const ingredient of recipe.ingredients) {
+                    if (!player.materials[ingredient.id] || player.materials[ingredient.id] < ingredient.quantity) {
+                        canCraft = false;
+                        const materialName = materials[ingredient.id] ? materials[ingredient.id].name : ingredient.id;
+                        printToOutput(`You need ${ingredient.quantity}x ${materialName} to craft ${recipe.name}.`, 'text-danger');
+                        break;
+                    }
+                }
+
+                if (canCraft) {
+                    // Consume ingredients
                     for (const ingredient of recipe.ingredients) {
-                        if (!player.materials[ingredient.id] || player.materials[ingredient.id] < ingredient.quantity) {
-                            canCraft = false;
-                            const materialName = materials[ingredient.id] ? materials[ingredient.id].name : ingredient.id;
-                            printToOutput(`You need ${ingredient.quantity}x ${materialName} to craft ${recipe.name}.`, 'text-danger');
-                            break;
+                        player.materials[ingredient.id] -= ingredient.quantity;
+                        if (player.materials[ingredient.id] === 0) {
+                            delete player.materials[ingredient.id];
                         }
                     }
 
-                    if (canCraft) {
-                        // Consume ingredients
-                        for (const ingredient of recipe.ingredients) {
-                            player.materials[ingredient.id] -= ingredient.quantity;
-                            if (player.materials[ingredient.id] === 0) {
-                                delete player.materials[ingredient.id];
+                    // Add crafted item
+                    const resultId = recipe.result.id;
+                    const resultType = recipe.result.type;
+
+                    if (resultType === 'armor' || resultType === 'weapon') {
+                        const equipmentData = weapons[resultId] || armor[resultId];
+                        const newItem = {
+                            baseId: resultId,
+                            name: equipmentData.name,
+                            tier: 1,
+                            attributes: [],
+                            perkData: {} // Initialize perkData for crafted items
+                        };
+
+                        // Apply random attribute with lower chance of negative for crafted items
+                        if (Math.random() < 0.25) { // 25% chance for an attribute
+                            const attrs = equipmentData.type === 'weapon' ? possible_attributes.weapon : possible_attributes.armor;
+                            let randomAttr;
+                            if (Math.random() < 0.75) { // 75% chance for positive attribute
+                                const positiveAttrs = attrs.filter(attr => attr.value > 0 || attr.type === 'crit_chance' || attr.type === 'hit_chance');
+                                randomAttr = positiveAttrs[Math.floor(Math.random() * positiveAttrs.length)];
+                            } else { // 25% chance for negative attribute
+                                const negativeAttrs = attrs.filter(attr => attr.value < 0);
+                                randomAttr = negativeAttrs[Math.floor(Math.random() * negativeAttrs.length)];
+                            }
+                            if (randomAttr) {
+                                newItem.attributes.push(randomAttr);
+                                newItem.name += ` ${randomAttr.name}`;
                             }
                         }
-
-                        // Add crafted item
-                        const resultId = recipe.result.id;
-                        const resultType = recipe.result.type;
-
-                        if (resultType === 'armor' || resultType === 'weapon') {
-                            const equipmentData = weapons[resultId] || armor[resultId];
-                            const newItem = {
-                                baseId: resultId,
-                                name: equipmentData.name,
-                                tier: 1,
-                                attributes: [],
-                                perkData: {} // Initialize perkData for crafted items
-                            };
-
-                            // Apply random attribute with lower chance of negative for crafted items
-                            if (Math.random() < 0.25) { // 25% chance for an attribute
-                                const attrs = equipmentData.type === 'weapon' ? possible_attributes.weapon : possible_attributes.armor;
-                                let randomAttr;
-                                if (Math.random() < 0.75) { // 75% chance for positive attribute
-                                    const positiveAttrs = attrs.filter(attr => attr.value > 0 || attr.type === 'crit_chance' || attr.type === 'hit_chance');
-                                    randomAttr = positiveAttrs[Math.floor(Math.random() * positiveAttrs.length)];
-                                } else { // 25% chance for negative attribute
-                                    const negativeAttrs = attrs.filter(attr => attr.value < 0);
-                                    randomAttr = negativeAttrs[Math.floor(Math.random() * negativeAttrs.length)];
-                                }
-                                if (randomAttr) {
-                                    newItem.attributes.push(randomAttr);
-                                    newItem.name += ` ${randomAttr.name}`;
-                                }
-                            }
-                            if (equipmentData.perk === 'electric_stun') {
-                                newItem.currentCooldown = 0;
-                            }
-                            player.equipment.push(newItem);
-                            printToOutput(`You crafted a ${newItem.name}!`, 'text-item');
-                        } else { // It's a material or consumable
-                            if (player.materials[resultId]) {
-                                player.materials[resultId]++;
-                            } else {
-                                player.materials[resultId] = 1;
-                            }
-                            const itemData = materials[resultId] || consumables[resultId];
-                            printToOutput(`You crafted a ${itemData.name}!`, 'text-item');
+                        if (equipmentData.perk === 'electric_stun') {
+                            newItem.currentCooldown = 0;
                         }
+                        player.equipment.push(newItem);
+                        printToOutput(`You crafted a ${newItem.name}!`, 'text-item');
+                    } else { // It's a material or consumable
+                        if (player.materials[resultId]) {
+                            player.materials[resultId]++;
+                        } else {
+                            player.materials[resultId] = 1;
+                        }
+                        const itemData = materials[resultId] || consumables[resultId];
+                        printToOutput(`You crafted a ${itemData.name}!`, 'text-item');
                     }
-                } else {
-                    printToOutput(`Unknown recipe: '${recipeId}'.`, 'text-danger');
                 }
+            } else {
+                printToOutput(`Unknown recipe: '${recipeId}'.`, 'text-danger');
             }
-            break;
-
-
-        case 'use':
+        }
+    },
+    use: (args) => {
+        if (args.length > 0 && args[0].toLowerCase() === 'terminal') {
+            if (player.currentLocation === 'engineering') {
+                printToOutput("You access the engineering terminal. What would you like to do?", 'text-system');
+                printToOutput("1. Save progress", 'text-system');
+                printToOutput("2. Load progress", 'text-system');
+                awaitingInteractionSelection = true;
+                currentInteractionOptions = ['save', 'load'];
+            } else {
+                printToOutput("There is no terminal here.", 'text-danger');
+            }
+        } else {
             if (args.length > 0) {
-                const itemToUse = args[0];
+                const itemToUse = args[0].toLowerCase();
                 if (player.materials[itemToUse] && player.materials[itemToUse] > 0) {
                     const item = consumables[itemToUse];
                     if (item && item.type === 'consumable') {
@@ -962,7 +921,7 @@ function processCommand(command) {
                                 }
                             }
                         } else {
-                            printToOutput(`ERROR, UNAVALIBLE ACTION.`, 'text-danger');
+                            printToOutput("ERROR, UNAVALIBLE ACTION.", 'text-danger');
                         }
                 } else {
                     printToOutput("ERROR NOT FOUND.", 'text-danger');
@@ -970,309 +929,374 @@ function processCommand(command) {
             } else {
                 printToOutput("What do you want to use?", 'text-danger');
             }
-            break;
+        }
+    },
+    view: (args) => {
+        if (args.length > 0 && args[0].toLowerCase() === 'logs') {
+            if (isPlayerInLocation('medbay')) {
+                printToOutput("--- Accessing Medical Terminal ---", "text-system");
+                medicalLogs.forEach(log => {
+                    printToOutput(log, "text-dialogue");
+                });
+            } else {
+                printToOutput("There are no logs to view here.", 'text-danger');
+            }
+        } else {
+            printToOutput("What do you want to view?", 'text-danger');
+        }
+    },
+    scan: (args) => {
+        if (args.length > 0 && args[0].toLowerCase() === 'chip') {
+            if (isPlayerInLocation('engineering')) {
+                if (player.questItems.includes('memory_chip')) {
+                    printToOutput("--- Analyzing Memory Chip ---", "text-system");
+                    printToOutput("The chip contains encrypted security protocols for the 'Pioneer' shuttle. Access Level 1 granted.", "text-dialogue");
+                    
+                    // Remove chip and grant access
+                    player.questItems = player.questItems.filter(item => item !== 'memory_chip');
+                    player.securityAccessLevel = 1;
+                    printToOutput("Security Access Level 1 acquired. You can now 'fly pioneer' from the Shuttle Bay.", "text-success");
+                } else {
+                    printToOutput("You don't have a memory chip to scan.", 'text-danger');
+                }
+            } else {
+                printToOutput("You can only scan memory chips at the terminal in the Engineering Deck.", 'text-danger');
+            }
+        } else {
+            printToOutput("What do you want to scan?", 'text-danger');
+        }
+    },
+    fly: (args) => {
+        if (args.length > 0 && args[0].toLowerCase() === 'pioneer') {
+            if (isPlayerInLocation('shuttle_bay')) {
+                if (player.securityAccessLevel >= 1) {
+                    printToOutput("--- Activating 'Pioneer' Shuttle ---", "text-system");
+                    printToOutput("The shuttle's engines hum to life. You engage the thrusters and blast off into the unknown!", "text-success");
+                    // This could lead to a new game state, location, or even end the game.
+                    // For now, let's just end the game as a placeholder for completing this chapter.
+                    gameOver();
+                } else {
+                    printToOutput("ERROR, DENIED.", 'text-danger');
+                }
+            } else {
+                printToOutput("ERROR.", 'text-danger');
+            }
+        } else {
+            printToOutput("What do you want to fly?", 'text-danger');
+        }
+    },
+    drop: (args) => {
+        if (args.length > 0) {
+            const firstArg = args[0];
+            const isIndex = !isNaN(parseInt(firstArg));
 
-        case 'view':
-            if (args[0] === 'logs') {
-                if (isPlayerInLocation('medbay')) {
-                    printToOutput("--- Accessing Medical Terminal ---", "text-system");
-                    medicalLogs.forEach(log => {
-                        printToOutput(log, "text-dialogue");
+            if (isIndex) { // Dropping equipment by index
+                const index = parseInt(firstArg);
+                if (index >= 0 && index < player.equipment.length) {
+                    const droppedItem = player.equipment.splice(index, 1)[0]; // Remove from array
+                    printToOutput(`You dropped ${droppedItem.name}.`, 'text-system');
+                } else {
+                    printToOutput("Invalid equipment index.", 'text-danger');
+                }
+            } else { // Dropping materials by name
+                const itemToDrop = firstArg.toLowerCase();
+                let quantity = 1;
+                if (args.length > 1 && !isNaN(parseInt(args[1]))) {
+                    quantity = parseInt(args[1]);
+                }
+
+                if (player.materials[itemToDrop] && player.materials[itemToDrop] >= quantity) {
+                    const item = materials[itemToDrop] || consumables[itemToDrop];
+                    const itemName = item ? item.name : itemToDrop;
+                    
+                    player.materials[itemToDrop] -= quantity;
+                    if (player.materials[itemToDrop] <= 0) {
+                        delete player.materials[itemToDrop];
+                    }
+                    printToOutput(`You dropped ${quantity}x ${itemName}.`, 'text-system');
+                } else {
+                    printToOutput("You don't have enough of that material to drop.", 'text-danger');
+                }
+            }
+        } else {
+            printToOutput("What do you want to drop?", 'text-danger');
+        }
+    },
+    weapons: (args) => {
+        printToOutput("--- WEAPONS ---", 'text-system');
+        const foundWeapons = player.equipment.filter(item => weapons[item.baseId]);
+        if (foundWeapons.length === 0) {
+            printToOutput("ERROR, NULL.", 'text-system');
+        } else {
+            foundWeapons.forEach(item => {
+                const itemIndex = player.equipment.indexOf(item);
+                const weaponData = weapons[item.baseId];
+                const weaponTier = weaponData.tiers[item.tier - 1];
+                // Note: This does not yet account for attribute bonuses on the display.
+                printToOutput(`[${itemIndex}] ${item.name} (T${item.tier}) - Attack: ${weaponTier.attack}`, 'text-item');
+            });
+        }
+    },
+    armor: (args) => {
+        printToOutput("--- ARMOR ---", 'text-system');
+        const foundArmor = player.equipment.filter(item => armor[item.baseId]);
+        if (foundArmor.length === 0) {
+            printToOutput("ERROR, NULL", 'text-system');
+        } else {
+            foundArmor.forEach(item => {
+                const itemIndex = player.equipment.indexOf(item);
+                const armorData = armor[item.baseId];
+                const armorTier = armorData.tiers[item.tier - 1];
+                // Note: This does not yet account for attribute bonuses on the display.
+                printToOutput(`[${itemIndex}] ${item.name} (T${item.tier}) - Defense: ${armorTier.defense}`, 'text-item');
+            });
+        }
+    },
+    status: (args) => {
+        printToOutput("--- PLAYER STATUS ---", 'text-system');
+        printToOutput(`Health: ${player.health}/${player.maxHealth}`);
+        printToOutput(`Level: ${player.level} (XP: ${player.xp}/${getXpToNextLevel(player.level)})`);
+
+        // Calculate total attack
+        let totalPlayerAttack = player.attack;
+        let equippedWeaponName = "None";
+        if (player.currentWeapon) {
+            equippedWeaponName = player.currentWeapon.name;
+            const weaponData = weapons[player.currentWeapon.baseId];
+            const weaponTier = weaponData.tiers[player.currentWeapon.tier - 1];
+            totalPlayerAttack += weaponTier.attack;
+
+            player.currentWeapon.attributes.forEach(attr => {
+                if (attr.type === 'stat_change' && attr.stat === 'attack') {
+                    totalPlayerAttack += attr.value;
+                }
+            });
+        }
+
+        // Calculate total defense
+        let totalPlayerDefense = player.defense;
+        let equippedArmorName = "None";
+        if (player.currentArmor) {
+            equippedArmorName = player.currentArmor.name;
+            const armorData = armor[player.currentArmor.baseId];
+            const armorTier = armorData.tiers[player.currentArmor.tier - 1];
+            totalPlayerDefense += armorTier.defense;
+
+            player.currentArmor.attributes.forEach(attr => {
+                if (attr.type === 'stat_change' && attr.stat === 'defense') {
+                    totalPlayerDefense += attr.value;
+                }
+            });
+        }
+
+        printToOutput(`Equipped Weapon: ${equippedWeaponName}`, 'text-system');
+        printToOutput(`Equipped Armor: ${equippedArmorName}`, 'text-system');
+        printToOutput(`Total Attack: ${totalPlayerAttack}`, 'text-system');
+        printToOutput(`Total Defense: ${totalPlayerDefense}`, 'text-system');
+    },
+    repair: (args) => {
+        const repairCostScrap = 1;
+        const repairCostWiring = 1;
+        const healthRestored = 20;
+
+        const hasScrap = player.materials['scrap_metal'] && player.materials['scrap_metal'] >= repairCostScrap;
+        const hasWiring = player.materials['wiring'] && player.materials['wiring'] >= repairCostWiring;
+
+        if (hasScrap && hasWiring) {
+            // Consume materials
+            player.materials['scrap_metal'] -= repairCostScrap;
+            if (player.materials['scrap_metal'] === 0) {
+                delete player.materials['scrap_metal'];
+            }
+            player.materials['wiring'] -= repairCostWiring;
+            if (player.materials['wiring'] === 0) {
+                delete player.materials['wiring'];
+            }
+
+            // Restore health
+            player.health = Math.min(player.maxHealth, player.health + healthRestored);
+            printToOutput(`You used ${repairCostScrap} scrap metal and ${repairCostWiring} wiring to repair yourself, restoring ${healthRestored} health. Current health: ${player.health}/${player.maxHealth}`, 'text-system');
+        } else {
+            printToOutput(`You need ${repairCostScrap} scrap metal and ${repairCostWiring} wiring to repair yourself.`, 'text-danger');
+        }
+    },
+    upgrade: (args) => {
+        if (args.length > 0) {
+            const index = parseInt(args[0]);
+            if (!isNaN(index) && index >= 0 && index < player.equipment.length) {
+                const itemToUpgrade = player.equipment[index];
+                const itemData = weapons[itemToUpgrade.baseId] || armor[itemToUpgrade.baseId];
+
+                if (itemData) {
+                    const currentTierIndex = itemToUpgrade.tier - 1;
+                    if (currentTierIndex >= itemData.tiers.length - 1) {
+                        printToOutput(`${itemToUpgrade.name} is already at its maximum tier.`, 'text-danger');
+                        return;
+                    }
+
+                    const nextTier = itemData.tiers[currentTierIndex + 1];
+                    let canUpgrade = true;
+                    // Check materials
+                    if (nextTier.materials.length > 0) {
+                        for (const material of nextTier.materials) {
+                            if (!player.materials[material.id] || player.materials[material.id] < material.quantity) {
+                                canUpgrade = false;
+                                const materialName = materials[material.id] ? materials[material.id].name : material.id;
+                                printToOutput(`You need ${material.quantity}x ${materialName} to upgrade.`, 'text-danger');
+                                break;
+                            }
+                        }
+                    } else { // No materials needed for next tier (max tier)
+                        printToOutput(`${itemToUpgrade.name} cannot be upgraded any further.`, 'text-danger');
+                        canUpgrade = false;
+                    }
+
+                    if (canUpgrade) {
+                        // Consume materials
+                        for (const material of nextTier.materials) {
+                            player.materials[material.id] -= material.quantity;
+                            if (player.materials[material.id] === 0) {
+                                delete player.materials[material.id];
+                            }
+                        }
+
+                        // Apply upgrade
+                        itemToUpgrade.tier++;
+                        itemToUpgrade.name = `${itemData.name} T${itemToUpgrade.tier}`;
+                        printToOutput(`Successfully upgraded ${itemData.name} to Tier ${itemToUpgrade.tier}!`, 'text-success');
+                    }
+                } else {
+                    printToOutput("ERROR, NULL EXCEPTION.", 'text-danger');
+                }
+            } else {
+                printToOutput("Invalid item index. Type 'inventory' to see item indices.", 'text-danger');
+            }
+        } else {
+            printToOutput("What do you want to upgrade? (e.g., upgrade 1)", 'text-danger');
+        }
+    },
+    deconstruct: (args) => {
+        if (args.length > 0) {
+            const index = parseInt(args[0]);
+            if (!isNaN(index) && index >= 0 && index < player.equipment.length) {
+                const itemToDeconstruct = player.equipment[index];
+                const recipe = recipes[itemToDeconstruct.baseId];
+
+                if (recipe && recipe.ingredients) {
+                    printToOutput(`Deconstructing ${itemToDeconstruct.name}...`, 'text-system');
+                    player.equipment.splice(index, 1); // Remove item
+
+                    recipe.ingredients.forEach(ingredient => {
+                        const quantityToReturn = Math.floor(ingredient.quantity * (Math.random() * (0.75 - 0.5) + 0.5)); // 50-75% return
+                        if (quantityToReturn > 0) {
+                            if (player.materials[ingredient.id]) {
+                                player.materials[ingredient.id] += quantityToReturn;
+                            } else {
+                                player.materials[ingredient.id] = quantityToReturn;
+                            }
+                            const materialName = materials[ingredient.id] ? materials[ingredient.id].name : ingredient.id;
+                            printToOutput(`Recovered ${quantityToReturn}x ${materialName}.`, 'text-item');
+                        }
                     });
                 } else {
-                    printToOutput("There are no logs to view here.", 'text-danger');
+                    printToOutput("This item cannot be deconstructed or has no known recipe.", 'text-danger');
                 }
             } else {
-                printToOutput("What do you want to view?", 'text-danger');
+                printToOutput("Invalid item index. Type 'inventory' to see item indices.", 'text-danger');
             }
-            break;
+        } else {
+            printToOutput("What do you want to deconstruct? (e.g., deconstruct 0)", 'text-danger');
+        }
+    },
+    fight: (args) => {
+        if (args.length > 0) {
+            const enemyId = args[0].toLowerCase();
+            const currentLocation = locations[player.currentLocation];
 
-        case 'scan':
-            if (args[0] === 'chip') {
-                if (isPlayerInLocation('engineering')) {
-                    if (player.questItems.includes('memory_chip')) {
-                        printToOutput("--- Analyzing Memory Chip ---", "text-system");
-                        printToOutput("The chip contains encrypted security protocols for the 'Pioneer' shuttle. Access Level 1 granted.", "text-dialogue");
-                        
-                        // Remove chip and grant access
-                        player.questItems = player.questItems.filter(item => item !== 'memory_chip');
-                        player.securityAccessLevel = 1;
-                        printToOutput("Security Access Level 1 acquired. You can now 'fly pioneer' from the Shuttle Bay.", "text-success");
-                    } else {
-                        printToOutput("You don't have a memory chip to scan.", 'text-danger');
-                    }
-                } else {
-                    printToOutput("You can only scan memory chips at the terminal in the Engineering Deck.", 'text-danger');
-                }
+            if (currentLocation.enemiesInLocation && currentLocation.enemiesInLocation.includes(enemyId)) {
+                startBattle(enemies[enemyId]);
+            } else if (enemies[enemyId]) {
+                printToOutput(`There is no ${enemies[enemyId].name} here to fight.`, 'text-danger');
             } else {
-                printToOutput("What do you want to scan?", 'text-danger');
+                printToOutput(`Unknown enemy: '${enemyId}'.`, 'text-danger');
             }
-            break;
+        } else {
+            printToOutput("Who do you want to fight?", 'text-danger');
+        }
+    },
+    n: (args) => {
+        handleMovement('n');
+    },
+    s: (args) => {
+        handleMovement('s');
+    },
+    e: (args) => {
+        handleMovement('e');
+    },
+    w: (args) => {
+        handleMovement('w');
+    }
+};
 
-        case 'fly':
-            if (args[0] === 'pioneer') {
-                if (isPlayerInLocation('shuttle_bay')) {
-                    if (player.securityAccessLevel >= 1) {
-                        printToOutput("--- Activating 'Pioneer' Shuttle ---", "text-system");
-                        printToOutput("The shuttle's engines hum to life. You engage the thrusters and blast off into the unknown!", "text-success");
-                        // This could lead to a new game state, location, or even end the game.
-                        // For now, let's just end the game as a placeholder for completing this chapter.
-                        gameOver();
-                    } else {
-                        printToOutput("ERROR, DENIED.", 'text-danger');
-                    }
-                } else {
-                    printToOutput("ERROR.", 'text-danger');
-                }
-            } else {
-                printToOutput("What do you want to fly?", 'text-danger');
-            }
-            break;
+function processCommand(command) {
+    console.log("Processing command:", command);
+    console.log("battleActive:", battleActive);
+    console.log("awaitingInteractionChoice:", awaitingInteractionChoice);
+    console.log("awaitingInteractionSelection:", awaitingInteractionSelection);
+
+    if (battleActive) {
+        handleBattleCommand(command);
+        return;
     }
 
-        case 'drop':
-            if (args.length > 0) {
-                const firstArg = args[0];
-                const isIndex = !isNaN(parseInt(firstArg));
+    if (awaitingInteractionChoice) {
+        console.log("AWAITING USER INPUT...");
+        if (command.toLowerCase() === 'yes') {
+            awaitingInteractionChoice = false;
+            handleRoomInteractionYes();
+            return;
+        } else if (command.toLowerCase() === 'no') {
+            awaitingInteractionChoice = false;
+            printToOutput("You decide not to interact with the room for now.", 'text-system');
+            return;
+        } else {
+            printToOutput("ERROR INVALID OUTPUT, PLEASE USE 'yes' or 'no'.", 'text-danger');
+            return;
+        }
+    }
 
-                if (isIndex) { // Dropping equipment by index
-                    const index = parseInt(firstArg);
-                    if (index >= 0 && index < player.equipment.length) {
-                        const droppedItem = player.equipment.splice(index, 1)[0]; // Remove from array
-                        printToOutput(`You dropped ${droppedItem.name}.`, 'text-system');
-                    } else {
-                        printToOutput("Invalid equipment index.", 'text-danger');
-                    }
-                } else { // Dropping materials by name
-                    const itemToDrop = firstArg;
-                    let quantity = 1;
-                    if (args.length > 1 && !isNaN(parseInt(args[1]))) {
-                        quantity = parseInt(args[1]);
-                    }
-
-                    if (player.materials[itemToDrop] && player.materials[itemToDrop] >= quantity) {
-                        const item = materials[itemToDrop] || consumables[itemToDrop];
-                        const itemName = item ? item.name : itemToDrop;
-                        
-                        player.materials[itemToDrop] -= quantity;
-                        if (player.materials[itemToDrop] <= 0) {
-                            delete player.materials[itemToDrop];
-                        }
-                        printToOutput(`You dropped ${quantity}x ${itemName}.`, 'text-system');
-                    } else {
-                        printToOutput("You don't have enough of that material to drop.", 'text-danger');
-                    }
-                }
-            } else {
-                printToOutput("What do you want to drop?", 'text-danger');
+    if (awaitingInteractionSelection) {
+        console.log("AWAITING USER INPUT...");
+        const selection = parseInt(command);
+        if (!isNaN(selection) && selection >= 1 && selection <= currentInteractionOptions.length) {
+            const chosenOption = currentInteractionOptions[selection - 1];
+            console.log("Chosen option:", chosenOption);
+            awaitingInteractionSelection = false; // Reset state
+            currentInteractionOptions = []; // Clear options
+            if (chosenOption === 'save') {
+                saveGame();
+                return;
+            } else if (chosenOption === 'load') {
+                loadGame();
+                return;
             }
-            break;
+            processCommand(chosenOption); // Execute the chosen command
+            return;
+        } else {
+            printToOutput("ERROR, INVALID COMMAND.", 'text-danger');
+            return;
+        }
+    }
 
-        case 'weapons':
-            printToOutput("--- WEAPONS ---", 'text-system');
-            const foundWeapons = player.equipment.filter(item => weapons[item.baseId]);
-            if (foundWeapons.length === 0) {
-                printToOutput("ERROR, NULL.", 'text-system');
-            } else {
-                foundWeapons.forEach(item => {
-                    const itemIndex = player.equipment.indexOf(item);
-                    const weaponData = weapons[item.baseId];
-                    const weaponTier = weaponData.tiers[item.tier - 1];
-                    // Note: This does not yet account for attribute bonuses on the display.
-                    printToOutput(`[${itemIndex}] ${item.name} (T${item.tier}) - Attack: ${weaponTier.attack}`, 'text-item');
-                });
-            }
-            break;
-        case 'armor':
-            printToOutput("--- ARMOR ---", 'text-system');
-            const foundArmor = player.equipment.filter(item => armor[item.baseId]);
-            if (foundArmor.length === 0) {
-                printToOutput("ERROR, NULL", 'text-system');
-            } else {
-                foundArmor.forEach(item => {
-                    const itemIndex = player.equipment.indexOf(item);
-                    const armorData = armor[item.baseId];
-                    const armorTier = armorData.tiers[item.tier - 1];
-                    // Note: This does not yet account for attribute bonuses on the display.
-                    printToOutput(`[${itemIndex}] ${item.name} (T${item.tier}) - Defense: ${armorTier.defense}`, 'text-item');
-                });
-            }
-            break;
-        case 'status':
-            printToOutput("--- PLAYER STATUS ---", 'text-system');
-            printToOutput(`Health: ${player.health}/${player.maxHealth}`);
-            printToOutput(`Level: ${player.level} (XP: ${player.xp}/${getXpToNextLevel(player.level)})`);
+    const commandParts = command.split(' ');
+    const commandWord = commandParts[0].toLowerCase();
+    const args = commandParts.slice(1);
+    const handler = commandHandlers[commandWord];
 
-            // Calculate total attack
-            let totalPlayerAttack = player.attack;
-            let equippedWeaponName = "None";
-            if (player.currentWeapon) {
-                equippedWeaponName = player.currentWeapon.name;
-                const weaponData = weapons[player.currentWeapon.baseId];
-                const weaponTier = weaponData.tiers[player.currentWeapon.tier - 1];
-                totalPlayerAttack += weaponTier.attack;
-
-                player.currentWeapon.attributes.forEach(attr => {
-                    if (attr.type === 'stat_change' && attr.stat === 'attack') {
-                        totalPlayerAttack += attr.value;
-                    }
-                });
-            }
-
-            // Calculate total defense
-            let totalPlayerDefense = player.defense;
-            let equippedArmorName = "None";
-            if (player.currentArmor) {
-                equippedArmorName = player.currentArmor.name;
-                const armorData = armor[player.currentArmor.baseId];
-                const armorTier = armorData.tiers[player.currentArmor.tier - 1];
-                totalPlayerDefense += armorTier.defense;
-
-                player.currentArmor.attributes.forEach(attr => {
-                    if (attr.type === 'stat_change' && attr.stat === 'defense') {
-                        totalPlayerDefense += attr.value;
-                    }
-                });
-            }
-
-            printToOutput(`Equipped Weapon: ${equippedWeaponName}`, 'text-system');
-            printToOutput(`Equipped Armor: ${equippedArmorName}`, 'text-system');
-            printToOutput(`Total Attack: ${totalPlayerAttack}`, 'text-system');
-            printToOutput(`Total Defense: ${totalPlayerDefense}`, 'text-system');
-            break;
-        case 'repair':
-            const repairCostScrap = 1;
-            const repairCostWiring = 1;
-            const healthRestored = 20;
-
-            const hasScrap = player.materials['scrap_metal'] && player.materials['scrap_metal'] >= repairCostScrap;
-            const hasWiring = player.materials['wiring'] && player.materials['wiring'] >= repairCostWiring;
-
-            if (hasScrap && hasWiring) {
-                // Consume materials
-                player.materials['scrap_metal'] -= repairCostScrap;
-                if (player.materials['scrap_metal'] === 0) {
-                    delete player.materials['scrap_metal'];
-                }
-                player.materials['wiring'] -= repairCostWiring;
-                if (player.materials['wiring'] === 0) {
-                    delete player.materials['wiring'];
-                }
-
-                // Restore health
-                player.health = Math.min(player.maxHealth, player.health + healthRestored);
-                printToOutput(`You used ${repairCostScrap} scrap metal and ${repairCostWiring} wiring to repair yourself, restoring ${healthRestored} health. Current health: ${player.health}/${player.maxHealth}`, 'text-system');
-            } else {
-                printToOutput(`You need ${repairCostScrap} scrap metal and ${repairCostWiring} wiring to repair yourself.`, 'text-danger');
-            }
-            break;
-
-        case 'upgrade':
-            if (args.length > 0) {
-                const index = parseInt(args[0]);
-                if (!isNaN(index) && index >= 0 && index < player.equipment.length) {
-                    const itemToUpgrade = player.equipment[index];
-                    const itemData = weapons[itemToUpgrade.baseId] || armor[itemToUpgrade.baseId];
-
-                    if (itemData) {
-                        const currentTierIndex = itemToUpgrade.tier - 1;
-                        if (currentTierIndex >= itemData.tiers.length - 1) {
-                            printToOutput(`${itemToUpgrade.name} is already at its maximum tier.`, 'text-danger');
-                            return;
-                        }
-
-                        const nextTier = itemData.tiers[currentTierIndex + 1];
-                        let canUpgrade = true;
-                        // Check materials
-                        if (nextTier.materials.length > 0) {
-                            for (const material of nextTier.materials) {
-                                if (!player.materials[material.id] || player.materials[material.id] < material.quantity) {
-                                    canUpgrade = false;
-                                    const materialName = materials[material.id] ? materials[material.id].name : material.id;
-                                    printToOutput(`You need ${material.quantity}x ${materialName} to upgrade.`, 'text-danger');
-                                    break;
-                                }
-                            }
-                        } else { // No materials needed for next tier (max tier)
-                            printToOutput(`${itemToUpgrade.name} cannot be upgraded any further.`, 'text-danger');
-                            canUpgrade = false;
-                        }
-
-                        if (canUpgrade) {
-                            // Consume materials
-                            for (const material of nextTier.materials) {
-                                player.materials[material.id] -= material.quantity;
-                                if (player.materials[material.id] === 0) {
-                                    delete player.materials[material.id];
-                                }
-                            }
-
-                            // Apply upgrade
-                            itemToUpgrade.tier++;
-                            itemToUpgrade.name = `${itemData.name} T${itemToUpgrade.tier}`;
-                            printToOutput(`Successfully upgraded ${itemData.name} to Tier ${itemToUpgrade.tier}!`, 'text-success');
-                        }
-                    } else {
-                        printToOutput("ERROR, NULL EXCEPTION.", 'text-danger');
-                    }
-                } else {
-                    printToOutput("Invalid item index. Type 'inventory' to see item indices.", 'text-danger');
-                }
-            } else {
-                printToOutput("What do you want to upgrade? (e.g., upgrade 1)", 'text-danger');
-            }
-            break;
-        case 'deconstruct':
-            if (args.length > 0) {
-                const index = parseInt(args[0]);
-                if (!isNaN(index) && index >= 0 && index < player.equipment.length) {
-                    const itemToDeconstruct = player.equipment[index];
-                    const recipe = recipes[itemToDeconstruct.baseId];
-
-                    if (recipe && recipe.ingredients) {
-                        printToOutput(`Deconstructing ${itemToDeconstruct.name}...`, 'text-system');
-                        player.equipment.splice(index, 1); // Remove item
-
-                        recipe.ingredients.forEach(ingredient => {
-                            const quantityToReturn = Math.floor(ingredient.quantity * (Math.random() * (0.75 - 0.5) + 0.5)); // 50-75% return
-                            if (quantityToReturn > 0) {
-                                if (player.materials[ingredient.id]) {
-                                    player.materials[ingredient.id] += quantityToReturn;
-                                } else {
-                                    player.materials[ingredient.id] = quantityToReturn;
-                                }
-                                const materialName = materials[ingredient.id] ? materials[ingredient.id].name : ingredient.id;
-                                printToOutput(`Recovered ${quantityToReturn}x ${materialName}.`, 'text-item');
-                            }
-                        });
-                    } else {
-                        printToOutput("This item cannot be deconstructed or has no known recipe.", 'text-danger');
-                    }
-                } else {
-                    printToOutput("Invalid item index. Type 'inventory' to see item indices.", 'text-danger');
-                }
-            } else {
-                printToOutput("What do you want to deconstruct? (e.g., deconstruct 0)", 'text-danger');
-            }
-            break;
-        case 'fight':
-            if (args.length > 0) {
-                const enemyId = args[0];
-                const currentLocation = locations[player.currentLocation];
-    
-                if (currentLocation.enemiesInLocation && currentLocation.enemiesInLocation.includes(enemyId)) {
-                    startBattle(enemies[enemyId]);
-                } else if (enemies[enemyId]) {
-                    printToOutput(`There is no ${enemies[enemyId].name} here to fight.`, 'text-danger');
-                } else {
-                    printToOutput(`Unknown enemy: '${enemyId}'.`, 'text-danger');
-                }
-            } else {
-                printToOutput("Who do you want to fight?", 'text-danger');
-            }
-            break;
-        default:
-            printToOutput(`Unknown command: '${command}'. Type 'help' for a list of commands.`, 'text-danger');
+    if (handler) {
+        handler(args);
+    } else {
+        printToOutput(`Unknown command: '${command}'. Type 'help' for a list of commands.`, 'text-danger');
     }
 }
 
@@ -1283,6 +1307,9 @@ function handleRoomInteractionYes() {
 
     if (currentLocation.searchable_materials && currentLocation.searchable_materials.length > 0) {
         options.push("search");
+    }
+    if (player.currentLocation === 'engineering') {
+        options.push("use terminal");
     }
     if (player.currentLocation === 'medbay') {
         options.push("view logs");
@@ -1374,7 +1401,7 @@ function handleEnemyDefeated() {
     if (defeatedEnemy.baseId === 'corrupted_android' && !player.quests.corruptedAndroidDefeated) {
         player.questItems.push('memory_chip');
         player.quests.corruptedAndroidDefeated = true;
-        printToOutput("You retrieve a 'Memory Chip' from the defeated android. New Objective: Take the Memory Chip to the Engineering Deck.", 'text-success');
+        printToOutput("You retrieve a 'Memory Chip' from the defeated android. New Objective: Take the Memory Chip to the Engineering Deck.", "text-success");
     }
     // --- END QUEST ITEM LOGIC ---
 
@@ -1704,6 +1731,42 @@ function gainPerkXP(weapon, perkType, xpAmount) {
         perk.xpToNextLevel = Math.floor(perk.xpToNextLevel * 1.5); // Scale XP needed for next level
         printToOutput(`${weapon.name}'s ${perkType} perk leveled up to ${perk.level}!`, 'text-success');
     }
+}
+
+function saveGame() {
+    const data = JSON.stringify(player, null, 2);
+    const blob = new Blob([data], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'player_data.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    printToOutput("Game progress saved.", "text-system");
+}
+
+function loadGame() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = e => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    player = data;
+                    printToOutput("Game progress loaded.", "text-system");
+                    displayLocation();
+                } catch (error) {
+                    printToOutput("Error loading save file.", "text-danger");
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+    input.click();
 }
 
 async function runBootSequence() {
